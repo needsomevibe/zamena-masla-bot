@@ -9,9 +9,14 @@ from aiogram.filters import CommandStart, StateFilter
 import googlemaps
 import aiosqlite
 from keep_alive import keep_alive
+import os
+from dotenv import load_dotenv
+
+# Загрузка переменных окружения из файла .env
+load_dotenv('token.env')
 
 # API Keys and Configuration
-BOT_TOKEN = "7897785949:AAGYzEK4iH9FPi4-BmYRdozrAipnytENAkc"
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 GOOGLE_PLACES_API_KEY = "AIzaSyB6IPLVxeFvSPLRuHMNiMQLN3zk_fsXCms"
 GMAPS = googlemaps.Client(key=GOOGLE_PLACES_API_KEY)
 
