@@ -8,6 +8,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemo
 from aiogram.filters import CommandStart, StateFilter
 import googlemaps
 import aiosqlite
+from keep_alive import keep_alive
 
 # API Keys and Configuration
 BOT_TOKEN = "7897785949:AAGYzEK4iH9FPi4-BmYRdozrAipnytENAkc"
@@ -484,4 +485,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+    keep_alive()
     asyncio.run(main())
