@@ -11,6 +11,7 @@ import aiosqlite
 from keep_alive import keep_alive
 import os
 from dotenv import load_dotenv
+from math import radians, sin, cos, sqrt, atan2
 
 # Загрузка переменных окружения из файла .env
 load_dotenv('token.env')
@@ -292,6 +293,20 @@ async def get_user_cars(user_id):
         )
         return await cursor.fetchall()
 
+def calculate_distance(lat1, lon1, lat2, lon2):
+    R = 6371  # радиус Земли в километрах
+    
+    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+    
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+    distance = R * c
+    
+    return round(distance * 1000)  # возвращаем в метрах
+
 # Handlers
 @dp.message(CommandStart(), StateFilter('*'))
 async def start_command(message: types.Message, state: FSMContext):
@@ -456,15 +471,22 @@ async def get_location(message: types.Message, state: FSMContext):
         places_result = GMAPS.places_nearby(location=(latitude, longitude), radius=5000, type="car_repair")
         
         if places_result.get('results'):
-            sorted_places = sorted(places_result['results'], key=lambda x: x.get('distance', float('inf')))
-            nearest_places = sorted_places[:5]
+            nearest_places = []
+            for place in places_result['results']:
+                place_lat = place['geometry']['location']['lat']
+                place_lng = place['geometry']['location']['lng']
+                distance = calculate_distance(latitude, longitude, place_lat, place_lng)
+                place['distance'] = distance
+                nearest_places.append(place)
+            
+            # Сортируем места по расстоянию
+            sorted_places = sorted(nearest_places, key=lambda x: x['distance'])[:5]
 
             sto_list = []
-            for place in nearest_places:
+            for place in sorted_places:
                 name = place.get('name', 'Неизвестное СТО')
                 rating = place.get('rating', 'Нет рейтинга')
-                place_id = place.get('place_id')
-                distance = place.get('distance', 'Неизвестно')
+                distance = place['distance']  # теперь у нас точно есть расстояние
                 
                 maps_url = f"https://www.google.com/maps/dir/?api=1&destination={place['geometry']['location']['lat']},{place['geometry']['location']['lng']}"
                 
